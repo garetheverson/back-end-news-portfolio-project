@@ -24,7 +24,7 @@ describe('GET /api/topics', () => {
       });
   });
   describe('GET /api/[unrecognised path]', () => {
-    test('404: responds with "Route note found" for an unrecognised GET path', () => {
+    test('404: responds with "Route not found" for an unrecognised GET path', () => {
       return request(app)
         .get('/api/blahblahblah')
         .expect(404)
