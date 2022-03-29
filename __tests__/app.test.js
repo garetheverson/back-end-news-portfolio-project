@@ -57,6 +57,27 @@ describe('Errors: Invalid PATCH requests: vote increment / decrements via /api/a
         expect(res.body.msg).toBe('Missing valid inc_votes');
       });
   });
+  it("400: Responds with 'Article ID must be a number' if article_id not a number, ", () => {
+    const identifier = 'notNum';
+    return request(app)
+      .patch(`/api/articles/${identifier}`)
+      .send({ inc_votes: 2 })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe('Article ID must be a number');
+      });
+  });
+  it("400: Responds with 'Votes property must be a number' if inc_votes not a number, ", () => {
+    const identifier = 3;
+    const votesIsNaN = 'notNum';
+    return request(app)
+      .patch(`/api/articles/1`)
+      .send({ inc_votes: votesIsNaN })
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe('Votes property must be a number');
+      });
+  });
 });
 
 // SUCCESS PATHS
@@ -79,7 +100,7 @@ describe('Success path: GET requests for topics: /api/topics', () => {
 });
 
 describe('Success path: GET requests for articles: /api/articles/:article_id', () => {
-  it('200: Responds with a given article that matches the ID of the params', () => {
+  it('200: Responds with a given article that matches the ID of the params and comments count of 2', () => {
     const identifier = 3;
     return request(app)
       .get(`/api/articles/${identifier}`)
@@ -94,6 +115,26 @@ describe('Success path: GET requests for articles: /api/articles/:article_id', (
           body: 'some gifs',
           created_at: '2020-11-03T09:12:00.000Z',
           votes: 0,
+          comment_count: '2',
+        });
+      });
+  });
+  it('200: Responds with a given article that matches the ID of the params and comments count of 0 for article without comments', () => {
+    const identifier = 4;
+    return request(app)
+      .get(`/api/articles/${identifier}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.article).toBeInstanceOf(Object);
+        expect(res.body.article).toEqual({
+          article_id: identifier,
+          title: 'Student SUES Mitch!',
+          topic: 'mitch',
+          author: 'rogersop',
+          body: 'We all love Mitch and his wonderful, unique typing style. However, the volume of his typing has ALLEGEDLY burst another students eardrums, and they are now suing for damages',
+          created_at: '2020-05-06T01:14:00.000Z',
+          votes: 0,
+          comment_count: '0',
         });
       });
   });

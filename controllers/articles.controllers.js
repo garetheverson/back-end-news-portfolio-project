@@ -15,8 +15,14 @@ exports.getArticleById = (req, res, next) => {
 exports.patchArticleVotesById = (req, res, next) => {
   const { article_id } = req.params;
   const { inc_votes } = req.body;
-  if (article_id && inc_votes === undefined) {
+  if (inc_votes === undefined) {
     return next({ status: 400, msg: 'Missing valid inc_votes' });
+  }
+  if (isNaN(article_id)) {
+    return next({ status: 400, msg: 'Article ID must be a number' });
+  }
+  if (isNaN(inc_votes)) {
+    return next({ status: 400, msg: 'Votes property must be a number' });
   }
   updateArticleVotesById(article_id, inc_votes)
     .then((article) => {

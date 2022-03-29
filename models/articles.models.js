@@ -2,11 +2,14 @@ const db = require('../db/connection');
 const format = require('pg-format');
 
 exports.selectArticleById = (article_id) => {
-  const query = `SELECT u.username as author, a.title,a.article_id, a.body,a.topic,a.created_at, a.votes
+  const query = `SELECT u.username as author, a.title,a.article_id, a.body,a.topic,a.created_at, a.votes, COUNT(c.article_id) as comment_count
     FROM articles a
     INNER JOIN  users u
     ON a.author = u.username
-    WHERE a.article_id = $1;`;
+    LEFT JOIN comments c
+    on a.article_id = c.article_id
+    WHERE a.article_id = $1
+    GROUP BY u.username, a.title,a.article_id, a.body,a.topic,a.created_at, a.votes;`;
 
   return db.query(query, [article_id]).then((res) => {
     if (!res.rows.length) {
