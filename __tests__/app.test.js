@@ -7,7 +7,7 @@ const testData = require('../db/data/test-data');
 afterAll(() => db.end());
 beforeEach(() => seed(testData));
 
-describe('Common errors', () => {
+describe('Errors: GET requests for topics: /api/topics', () => {
   it('404: "Path not found" for an unrecognised Topic GET path', () => {
     return request(app)
       .get('/api/blahblahblah')
@@ -16,6 +16,8 @@ describe('Common errors', () => {
         expect(res.body.msg).toBe('Path not found');
       });
   });
+});
+describe('Errors: GET requests for articles: /api/articles/:article_id', () => {
   it('404: "Article not found" for an unrecognised article GET path', () => {
     return request(app)
       .get('/api/articles/1234567890')
@@ -34,7 +36,7 @@ describe('Common errors', () => {
   });
 });
 
-describe('GET requests', () => {
+describe('Success path: GET requests for topics: /api/topics', () => {
   it('200: Responds with array of topic objects, including slug and description', () => {
     return request(app)
       .get('/api/topics')
@@ -50,20 +52,23 @@ describe('GET requests', () => {
         });
       });
   });
-  it('should return a given article that matches the ID of the params', () => {
+});
+describe('Success path: GET requests for articles: /api/articles/:article_id', () => {
+  it('200: Responds with a given article that matches the ID of the params', () => {
+    const identifier = 3;
     return request(app)
-      .get(`/api/articles/2`)
+      .get(`/api/articles/${identifier}`)
       .expect(200)
       .then((res) => {
         expect(res.body.article).toBeInstanceOf(Object);
-        expect(res.body.article).toMatchObject({
-          article_id: expect.any(Number),
-          title: expect.any(String),
-          topic: expect.any(String),
-          author: expect.any(String),
-          body: expect.any(String),
-          created_at: expect.any(String),
-          votes: expect.any(Number),
+        expect(res.body.article).toEqual({
+          article_id: identifier,
+          title: 'Eight pug gifs that remind me of mitch',
+          topic: 'mitch',
+          author: 'icellusedkars',
+          body: 'some gifs',
+          created_at: '2020-11-03T09:12:00.000Z',
+          votes: 0,
         });
       });
   });
