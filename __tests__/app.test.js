@@ -73,3 +73,26 @@ describe('Success path: GET requests for articles: /api/articles/:article_id', (
       });
   });
 });
+
+describe('Success path: GET requests for users: /api/users', () => {
+  it('200: Responds with array of user objects, including just username', () => {
+    return request(app)
+      .get('/api/users')
+      .expect(200)
+      .then((res) => {
+        expect(res.body.users).toBeInstanceOf(Array);
+        expect(res.body.users.length).toBe(4);
+        res.body.users.forEach((user) => {
+          expect(user).toMatchObject({
+            username: expect.any(String),
+          });
+        });
+        expect(res.body.users[0]).toEqual({
+          username: 'butter_bridge',
+        });
+        expect(res.body.users[3]).toEqual({
+          username: 'lurker',
+        });
+      });
+  });
+});
