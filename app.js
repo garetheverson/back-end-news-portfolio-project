@@ -4,12 +4,15 @@ const {
   getArticleById,
 } = require('./controllers/topics.controllers');
 
+const { getUsers } = require('./controllers/users.controllers');
+
 const app = express();
 // app.use(express.json());
 
 // Methods
 app.get('/api/topics', getTopics);
 app.get('/api/articles/:article_id', getArticleById);
+app.get('/api/users', getUsers);
 
 // Handle path not found errors
 app.all('/*', (req, res) => {
