@@ -1,15 +1,20 @@
 const express = require('express');
+const { getTopics } = require('./controllers/topics.controllers');
+
 const {
-  getTopics,
   getArticleById,
-} = require('./controllers/topics.controllers');
+  patchArticleVotesById,
+} = require('./controllers/articles.controllers');
 
 const app = express();
-// app.use(express.json());
+app.use(express.json());
 
-// Methods
+// Get Methods
 app.get('/api/topics', getTopics);
 app.get('/api/articles/:article_id', getArticleById);
+
+// Patch Methods
+app.patch('/api/articles/:article_id', patchArticleVotesById);
 
 // Handle path not found errors
 app.all('/*', (req, res) => {
