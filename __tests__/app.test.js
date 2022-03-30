@@ -80,6 +80,18 @@ describe('Errors: Invalid PATCH requests: vote increment / decrements via /api/a
   });
 });
 
+describe('Errors: GET requests for /api/articles/:article_id/comments', () => {
+  it("404: Responds with 'No comments found' message given article_id without comments", () => {
+    const identifier = 4;
+    return request(app)
+      .get(`/api/articles/${identifier}/comments`)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe('No comments found');
+      });
+  });
+});
+
 // SUCCESS PATHS
 describe('Success path: GET requests for topics: /api/topics', () => {
   it('200: Responds with array of topic objects, including slug and description', () => {
@@ -199,6 +211,26 @@ describe('Success path: GET requests for users: /api/users', () => {
         });
         expect(res.body.users[3]).toEqual({
           username: 'lurker',
+        });
+      });
+  });
+});
+
+describe('Success path: GET requests for /api/articles/:article_id/comments', () => {
+  it('200: Responds with an array of comments given article_id with following properties: comment_id, votes, created_at, author, body', () => {
+    const identifier = 9;
+    return request(app)
+      .get(`/api/articles/${identifier}/comments`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.comments).toBeInstanceOf(Array);
+        expect(res.body.comments.length).toBe(2);
+        expect(res.body.comments[1]).toEqual({
+          comment_id: 17,
+          votes: 20,
+          created_at: '2020-03-14T17:02:00.000Z',
+          author: 'icellusedkars',
+          body: 'The owls are not what they seem.',
         });
       });
   });

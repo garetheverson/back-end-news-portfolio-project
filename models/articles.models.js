@@ -19,6 +19,21 @@ exports.selectArticleById = (article_id) => {
   });
 };
 
+exports.selectCommentsByArticleId = (article_id) => {
+  const query = `SELECT c.comment_id, c.votes, c.created_at, c.author, c.body
+  FROM comments c
+  INNER JOIN articles a
+  ON c.article_id = a.article_id
+  WHERE a.article_id = $1`;
+
+  return db.query(query, [article_id]).then((res) => {
+    if (!res.rows.length) {
+      return Promise.reject({ msg: 'No comments found', status: 404 });
+    }
+    return res.rows;
+  });
+};
+
 exports.updateArticleVotesById = (article_id, inc_votes) => {
   const query = `UPDATE articles
   SET votes = votes + $1
