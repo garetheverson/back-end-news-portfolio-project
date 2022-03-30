@@ -3,6 +3,7 @@ const request = require('supertest');
 const db = require('../db/connection');
 const seed = require('../db/seeds/seed');
 const testData = require('../db/data/test-data');
+const jestSorted = require('jest-sorted');
 
 afterAll(() => db.end());
 beforeEach(() => seed(testData));
@@ -212,6 +213,9 @@ describe('Success path: GET /api/articles', () => {
       .then((res) => {
         expect(res.body.articles).toBeInstanceOf(Array);
         expect(res.body.articles.length).toBe(12);
+        expect(res.body.articles).toBeSortedBy('created_at', {
+          descending: true,
+        });
         res.body.articles.forEach((article) => {
           expect(article).toMatchObject({
             author: expect.any(String),
