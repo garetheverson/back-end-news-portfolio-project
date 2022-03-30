@@ -69,10 +69,10 @@ describe('Errors: Invalid PATCH requests: vote increment / decrements via /api/a
   });
   it("400: Responds with 'Votes property must be a number' if inc_votes not a number, ", () => {
     const identifier = 3;
-    const votesIsNaN = 'notNum';
+    const votesIsAString = 'notNum';
     return request(app)
       .patch(`/api/articles/1`)
-      .send({ inc_votes: votesIsNaN })
+      .send({ inc_votes: votesIsAString })
       .expect(400)
       .then((res) => {
         expect(res.body.msg).toBe('Votes property must be a number');
@@ -199,6 +199,47 @@ describe('Success path: GET requests for users: /api/users', () => {
         });
         expect(res.body.users[3]).toEqual({
           username: 'lurker',
+        });
+      });
+  });
+});
+
+describe('Success path: GET /api/articles', () => {
+  test('200: Responds with array of article objects, including author, title, article_id, topic, created_at (sorted desc), votes, comment_count', () => {
+    return request(app)
+      .get('/api/articles')
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(12);
+        res.body.articles.forEach((article) => {
+          expect(article).toMatchObject({
+            author: expect.any(String),
+            title: expect.any(String),
+            article_id: expect.any(Number),
+            topic: expect.any(String),
+            created_at: expect.any(String),
+            votes: expect.any(Number),
+            comment_count: expect.any(String),
+          });
+        });
+        expect(res.body.articles[4]).toEqual({
+          author: 'rogersop',
+          title: 'UNCOVERED: catspiracy to bring down democracy',
+          article_id: 5,
+          topic: 'cats',
+          created_at: '2020-08-03T13:14:00.000Z',
+          votes: 0,
+          comment_count: '2',
+        });
+        expect(res.body.articles[10]).toEqual({
+          author: 'icellusedkars',
+          title: 'Am I a cat?',
+          article_id: 11,
+          topic: 'mitch',
+          created_at: '2020-01-15T22:21:00.000Z',
+          votes: 0,
+          comment_count: '0',
         });
       });
   });
