@@ -81,17 +81,6 @@ describe('Errors: Invalid PATCH requests: vote increment / decrements via /api/a
 });
 
 describe('Errors: GET requests for /api/articles/:article_id/comments', () => {
-  it("404: Responds with 'No comments found' message given article_id without comments", () => {
-    const identifier = 4;
-    return request(app)
-      .get(`/api/articles/${identifier}/comments`)
-      .expect(404)
-      .then((res) => {
-        expect(res.body.msg).toBe(
-          `No comments found for article ${identifier}`
-        );
-      });
-  });
   it("404: Responds with 'No article found' message given article_id that doesn't exist", () => {
     const identifier = 1234567890;
     return request(app)
@@ -270,6 +259,16 @@ describe('Success path: GET requests for /api/articles/:article_id/comments', ()
           created_at: '2020-03-14T17:02:00.000Z',
           votes: 20,
         });
+      });
+  });
+  it('200: Responds with empty array given article_id without comments', () => {
+    const identifier = 4;
+    return request(app)
+      .get(`/api/articles/${identifier}/comments`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.comments).toBeInstanceOf(Array);
+        expect(res.body.comments.length).toBe(0);
       });
   });
 });
