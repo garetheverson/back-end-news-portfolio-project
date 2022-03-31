@@ -15,7 +15,14 @@ exports.getArticleById = (req, res, next) => {
 
 exports.getCommentsByArticleId = (req, res, next) => {
   const { article_id } = req.params;
-  selectCommentsByArticleId(article_id)
+  if (isNaN(article_id)) {
+    return next({ status: 400, msg: 'Article ID must be a number' });
+  }
+
+  selectArticleById(article_id)
+    .then((res) => {
+      return selectCommentsByArticleId(res.article_id);
+    })
     .then((comments) => {
       res.status(200).send({ comments });
     })

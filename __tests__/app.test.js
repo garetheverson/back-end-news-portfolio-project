@@ -25,7 +25,7 @@ describe('Errors: GET requests for articles: /api/articles/:article_id', () => {
       .get('/api/articles/1234567890')
       .expect(404)
       .then((res) => {
-        expect(res.body.msg).toBe('Article not found');
+        expect(res.body.msg).toBe('Article 1234567890 not found');
       });
   });
   it('400: Invalid data type', () => {
@@ -45,7 +45,7 @@ describe('Errors: Invalid PATCH requests: vote increment / decrements via /api/a
       .send({ inc_votes: 4 })
       .expect(404)
       .then((res) => {
-        expect(res.body.msg).toBe('Article not found');
+        expect(res.body.msg).toBe('Article 1234567890 not found');
       });
   });
   it("400: Responds with 'Missing valid inc_votes' if votes not provided, ", () => {
@@ -87,7 +87,45 @@ describe('Errors: GET requests for /api/articles/:article_id/comments', () => {
       .get(`/api/articles/${identifier}/comments`)
       .expect(404)
       .then((res) => {
-        expect(res.body.msg).toBe('No comments found');
+        expect(res.body.msg).toBe(
+          `No comments found for article ${identifier}`
+        );
+      });
+  });
+  it("404: Responds with 'No article found' message given article_id that doesn't exist", () => {
+    const identifier = 1234567890;
+    return request(app)
+      .get(`/api/articles/${identifier}/comments`)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Article ${identifier} not found`);
+      });
+  });
+  it("404: Responds with 'Invalid path' given GET path that doesn't exist", () => {
+    const identifier = 1;
+    return request(app)
+      .get(`/api/articles/${identifier}/blahblahblah`)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe('Path not found');
+      });
+  });
+  it("400: Responds with 'Article ID must be a number' message given article_id that isn't a number", () => {
+    const identifier = 'NotANum';
+    return request(app)
+      .get(`/api/articles/${identifier}/comments`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe('Article ID must be a number');
+      });
+  });
+  it("400: Responds with 'Article ID must be a number' message given article_id that is a SQL injection", () => {
+    const identifier = 'DROP DATABASE nc_news_test;';
+    return request(app)
+      .get(`/api/articles/${identifier}/comments`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe('Article ID must be a number');
       });
   });
 });
@@ -226,11 +264,11 @@ describe('Success path: GET requests for /api/articles/:article_id/comments', ()
         expect(res.body.comments).toBeInstanceOf(Array);
         expect(res.body.comments.length).toBe(2);
         expect(res.body.comments[1]).toEqual({
-          comment_id: 17,
-          votes: 20,
-          created_at: '2020-03-14T17:02:00.000Z',
           author: 'icellusedkars',
           body: 'The owls are not what they seem.',
+          comment_id: 17,
+          created_at: '2020-03-14T17:02:00.000Z',
+          votes: 20,
         });
       });
   });
