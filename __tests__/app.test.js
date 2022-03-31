@@ -100,7 +100,7 @@ describe('Errors: GET requests for /api/articles/:article_id/comments', () => {
         expect(res.body.msg).toBe('Path not found');
       });
   });
-  it("400: Responds with 'Article ID must be a number' message given article_id that isn't a number", () => {
+  it("400: Responds with 'Article ID must be a number' message given article_id that isn't a number in GET URL", () => {
     const identifier = 'NotANum';
     return request(app)
       .get(`/api/articles/${identifier}/comments`)
@@ -109,10 +109,83 @@ describe('Errors: GET requests for /api/articles/:article_id/comments', () => {
         expect(res.body.msg).toBe('Article ID must be a number');
       });
   });
-  it("400: Responds with 'Article ID must be a number' message given article_id that is a SQL injection", () => {
+  it("400: Responds with 'Article ID must be a number' message given article_id that is a SQL injection in GET URL", () => {
     const identifier = 'DROP DATABASE nc_news_test;';
     return request(app)
       .get(`/api/articles/${identifier}/comments`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe('Article ID must be a number');
+      });
+  });
+});
+
+describe('Errors: POST requests for /api/articles/:article_id/comments', () => {
+  it("404: Responds with 'No article found' message given article_id that doesn't exist in POST", () => {
+    const newComment = {
+      username: 'lurker',
+      body: 'Here is a returned comment',
+    };
+    const identifier = 1234567890;
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Article ${identifier} not found`);
+      });
+  });
+  it("404: Responds with 'Author not found' message given username that doesn't exist in POST", () => {
+    const newComment = {
+      username: 'NotAValidUser',
+      body: 'Here is a returned comment',
+    };
+    const identifier = 9;
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Author '${newComment.username}' not found`);
+      });
+  });
+  it("404: Responds with 'Invalid path' given POST path that doesn't exist", () => {
+    const newComment = {
+      username: 'lurker',
+      body: 'Here is a returned comment',
+    };
+    const identifier = 1;
+    return request(app)
+      .post(`/api/articles/${identifier}/blahblahblah`)
+      .send(newComment)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe('Path not found');
+      });
+  });
+  it("400: Responds with 'Article ID must be a number' message given article_id that isn't a number in POST URL", () => {
+    const newComment = {
+      username: 'lurker',
+      body: 'Here is a returned comment',
+    };
+    const identifier = 'NotANum';
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe('Article ID must be a number');
+      });
+  });
+  it("400: Responds with 'Article ID must be a number' message given article_id that is a SQL injection in POST URL", () => {
+    const newComment = {
+      username: 'lurker',
+      body: 'Here is a returned comment',
+    };
+    const identifier = 'DROP DATABASE nc_news_test;';
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
       .expect(400)
       .then((res) => {
         expect(res.body.msg).toBe('Article ID must be a number');
@@ -312,6 +385,29 @@ describe('Success path: GET /api/articles', () => {
           created_at: '2020-01-15T22:21:00.000Z',
           votes: 0,
           comment_count: '0',
+        });
+      });
+  });
+});
+describe('Success path: POST /api/articles/:article_id/comments', () => {
+  it('201: Responds with the posted comment', () => {
+    const newComment = {
+      username: 'lurker',
+      body: 'Here is a returned comment',
+    };
+    const identifier = 9;
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.comment).toEqual({
+          author: 'lurker',
+          body: 'Here is a returned comment',
+          comment_id: 19,
+          article_id: identifier,
+          created_at: expect.any(String),
+          votes: 0,
         });
       });
   });

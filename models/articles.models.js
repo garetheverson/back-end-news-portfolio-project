@@ -1,5 +1,6 @@
 const db = require('../db/connection');
 const format = require('pg-format');
+const res = require('express/lib/response');
 
 // SELECT models
 exports.selectArticleById = (article_id) => {
@@ -49,6 +50,17 @@ exports.selectArticles = () => {
       return Promise.reject({ msg: 'No articles found', status: 404 });
     }
     return res.rows;
+  });
+};
+
+// INSERT models
+exports.insertCommentByArticleId = (article_id, username, comment_body) => {
+  const query = `INSERT into comments (article_id, author, body) 
+  VALUES ($1, $2, $3)
+  RETURNING *;`;
+
+  return db.query(query, [article_id, username, comment_body]).then((res) => {
+    return res.rows[0];
   });
 };
 

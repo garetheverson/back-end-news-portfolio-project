@@ -3,7 +3,10 @@ const {
   updateArticleVotesById,
   selectCommentsByArticleId,
   selectArticles,
+  insertCommentByArticleId,
 } = require('../models/articles.models');
+
+const { selectUserByUsername } = require('../models/users.models');
 
 exports.getArticleById = (req, res, next) => {
   const { article_id } = req.params;
@@ -34,6 +37,27 @@ exports.getCommentsByArticleId = (req, res, next) => {
     })
     .then((comments) => {
       res.status(200).send({ comments });
+    })
+    .catch((err) => next(err));
+};
+
+exports.postCommentByArticleId = (req, res, next) => {
+  const { article_id } = req.params;
+  const { username, body } = req.body;
+  if (isNaN(article_id)) {
+    return next({ status: 400, msg: 'Article ID must be a number' });
+  }
+
+  selectArticleById(article_id)
+    .then((res) => {
+      return selectUserByUsername(username);
+    })
+    .then((res) => {
+      return insertCommentByArticleId(article_id, username, body);
+    })
+    .then((comment) => {
+      console.log(comment.body);
+      res.status(201).send({ comment });
     })
     .catch((err) => next(err));
 };
