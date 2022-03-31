@@ -4,6 +4,7 @@ const { getTopics } = require('./controllers/topics.controllers');
 const {
   getArticleById,
   patchArticleVotesById,
+  getArticles,
 } = require('./controllers/articles.controllers');
 
 const { getUsers } = require('./controllers/users.controllers');
@@ -14,6 +15,7 @@ app.use(express.json());
 // Get Methods
 app.get('/api/topics', getTopics);
 app.get('/api/articles/:article_id', getArticleById);
+app.get('/api/articles', getArticles);
 app.get('/api/users', getUsers);
 
 // Patch Methods
