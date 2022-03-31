@@ -191,6 +191,32 @@ describe('Errors: POST requests for /api/articles/:article_id/comments', () => {
         expect(res.body.msg).toBe('Article ID must be a number');
       });
   });
+  it("400: Responds with 'Username missing' message given username that doesn't exist in POST", () => {
+    const newComment = {
+      body: 'Here is a returned comment',
+    };
+    const identifier = 9;
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Username missing from post`);
+      });
+  });
+  it("400: Responds with 'Comment missing' message given comment body that doesn't exist in POST", () => {
+    const newComment = {
+      username: 'lurker',
+    };
+    const identifier = 9;
+    return request(app)
+      .post(`/api/articles/${identifier}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Comment missing from post`);
+      });
+  });
 });
 
 // SUCCESS PATHS

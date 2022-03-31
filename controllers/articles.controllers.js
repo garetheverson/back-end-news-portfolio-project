@@ -31,11 +31,13 @@ exports.getCommentsByArticleId = (req, res, next) => {
     return next({ status: 400, msg: 'Article ID must be a number' });
   }
 
-  selectArticleById(article_id)
-    .then((res) => {
-      return selectCommentsByArticleId(res.article_id);
-    })
-    .then((comments) => {
+  const promises = [
+    selectCommentsByArticleId(article_id),
+    selectArticleById(article_id),
+  ];
+  Promise.all(promises)
+    .then((results) => {
+      const comments = results[0];
       res.status(200).send({ comments });
     })
     .catch((err) => next(err));
@@ -47,16 +49,22 @@ exports.postCommentByArticleId = (req, res, next) => {
   if (isNaN(article_id)) {
     return next({ status: 400, msg: 'Article ID must be a number' });
   }
+  if (!req.body['username']) {
+    return next({ status: 400, msg: 'Username missing from post' });
+  }
+  if (!req.body['body']) {
+    return next({ status: 400, msg: 'Comment missing from post' });
+  }
 
-  selectArticleById(article_id)
-    .then((res) => {
-      return selectUserByUsername(username);
-    })
-    .then((res) => {
-      return insertCommentByArticleId(article_id, username, body);
-    })
-    .then((comment) => {
-      console.log(comment.body);
+  const promises = [
+    selectArticleById(article_id),
+    selectUserByUsername(username),
+    insertCommentByArticleId(article_id, username, body),
+  ];
+
+  Promise.all(promises)
+    .then((results) => {
+      const comment = results[2];
       res.status(201).send({ comment });
     })
     .catch((err) => next(err));
