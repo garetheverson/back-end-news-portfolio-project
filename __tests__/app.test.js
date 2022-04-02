@@ -4,6 +4,7 @@ const db = require('../db/connection');
 const seed = require('../db/seeds/seed');
 const testData = require('../db/data/test-data');
 const jestSorted = require('jest-sorted');
+const articles = require('../db/data/test-data/articles');
 
 afterAll(() => db.end());
 beforeEach(() => seed(testData));
@@ -218,6 +219,71 @@ describe('Errors: POST requests for /api/articles/:article_id/comments', () => {
       });
   });
 });
+describe('Errors: GET requests for /api/articles/', () => {
+  it("400: Responds with 'Invalid sort by on [sort_by]' message given sort_by that doesn't exist in GET query string", () => {
+    const sort_by = 'invalid_column';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=asc`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Invalid sort by on ${sort_by}`);
+      });
+  });
+  it("400: Responds with 'Invalid sort by order: valid values are 'asc' and 'desc'' message given sort_by that doesn't exist in GET query string", () => {
+    const sort_by = 'created_at';
+    const order = 'invalid_value';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=${order}`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(
+          `Invalid sort by order: valid values are 'asc' and 'desc'`
+        );
+      });
+  });
+  it("400: Responds with 'Invalid query string' message given invalid topic query index", () => {
+    const topic_index = 'topick';
+    return request(app)
+      .get(`/api/articles?${topic_index}=mitch&sort_by=created_at&order=asc`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(
+          `Invalid query string index: valid query indexes are 'topic', 'sort_by' and 'order'`
+        );
+      });
+  });
+  it("400: Responds with 'Invalid query string' message given invalid sort_by query index", () => {
+    const sort_by_index = 'invalid_sorted_by';
+    return request(app)
+      .get(`/api/articles?topic=mitch&${sort_by_index}=created_at&order=asc`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(
+          `Invalid query string index: valid query indexes are 'topic', 'sort_by' and 'order'`
+        );
+      });
+  });
+  it("400: Responds with 'Invalid query string' message given invalid order query index", () => {
+    const order_index = 'invalid_order';
+    return request(app)
+      .get(`/api/articles?topic=mitch&sort_by=created_at&${order_index}=asc`)
+      .expect(400)
+      .then((res) => {
+        expect(res.body.msg).toBe(
+          `Invalid query string index: valid query indexes are 'topic', 'sort_by' and 'order'`
+        );
+      });
+  });
+  it("404: Responds with 'Topic [topicName] not found' message given topic that doesn't exist in GET query string", () => {
+    const slug = 'dogs';
+    return request(app)
+      .get(`/api/articles?topic=${slug}`)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Topic '${slug}' not found`);
+      });
+  });
+});
 
 // SUCCESS PATHS
 describe('Success path: GET requests for topics: /api/topics', () => {
@@ -254,7 +320,7 @@ describe('Success path: GET requests for articles: /api/articles/:article_id', (
           body: 'some gifs',
           created_at: '2020-11-03T09:12:00.000Z',
           votes: 0,
-          comment_count: '2',
+          comment_count: 2,
         });
       });
   });
@@ -273,7 +339,7 @@ describe('Success path: GET requests for articles: /api/articles/:article_id', (
           body: 'We all love Mitch and his wonderful, unique typing style. However, the volume of his typing has ALLEGEDLY burst another students eardrums, and they are now suing for damages',
           created_at: '2020-05-06T01:14:00.000Z',
           votes: 0,
-          comment_count: '0',
+          comment_count: 0,
         });
       });
   });
@@ -391,7 +457,7 @@ describe('Success path: GET /api/articles', () => {
             topic: expect.any(String),
             created_at: expect.any(String),
             votes: expect.any(Number),
-            comment_count: expect.any(String),
+            comment_count: expect.any(Number),
           });
         });
         expect(res.body.articles[4]).toEqual({
@@ -401,7 +467,7 @@ describe('Success path: GET /api/articles', () => {
           topic: 'cats',
           created_at: '2020-08-03T13:14:00.000Z',
           votes: 0,
-          comment_count: '2',
+          comment_count: 2,
         });
         expect(res.body.articles[10]).toEqual({
           author: 'icellusedkars',
@@ -410,7 +476,7 @@ describe('Success path: GET /api/articles', () => {
           topic: 'mitch',
           created_at: '2020-01-15T22:21:00.000Z',
           votes: 0,
-          comment_count: '0',
+          comment_count: 0,
         });
       });
   });
@@ -435,6 +501,209 @@ describe('Success path: POST /api/articles/:article_id/comments', () => {
           created_at: expect.any(String),
           votes: 0,
         });
+      });
+  });
+});
+describe('Success path: GET /api/articles/ + queries', () => {
+  it('200: Responds with articles sorted by date descending (defaults) when no queries passed', () => {
+    return request(app)
+      .get(`/api/articles`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(12);
+        expect(res.body.articles).toBeSortedBy('created_at', {
+          descending: true,
+        });
+      });
+  });
+  it('200: Responds with topic = mitch articles sorted by title ASC when all 3 queries passed that way', () => {
+    const sort_by = 'title';
+    const order = 'asc';
+    const topic = 'mitch';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=${order}&topic=${topic}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(11);
+        expect(res.body.articles).toBeSortedBy(sort_by, {
+          ascending: true,
+        });
+        expect(res.body.articles[0]).toEqual({
+          author: 'icellusedkars',
+          title: 'A',
+          article_id: 6,
+          topic: 'mitch',
+          created_at: '2020-10-18T01:00:00.000Z',
+          votes: 0,
+          comment_count: 1,
+        });
+        expect(res.body.articles[10]).toEqual({
+          author: 'icellusedkars',
+          title: 'Z',
+          article_id: 7,
+          topic: 'mitch',
+          created_at: '2020-01-07T14:08:00.000Z',
+          votes: 0,
+          comment_count: 0,
+        });
+      });
+  });
+  it('200: Different SORT ORDER: Responds with topic = mitch articles sorted by TITLE DESC when all 3 queries passed that way', () => {
+    const sort_by = 'title';
+    const order = 'desc';
+    const topic = 'mitch';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=${order}&topic=${topic}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(11);
+        expect(res.body.articles).toBeSortedBy(sort_by, {
+          descending: true,
+        });
+        expect(res.body.articles[10]).toEqual({
+          author: 'icellusedkars',
+          title: 'A',
+          article_id: 6,
+          topic: 'mitch',
+          created_at: '2020-10-18T01:00:00.000Z',
+          votes: 0,
+          comment_count: 1,
+        });
+        expect(res.body.articles[0]).toEqual({
+          author: 'icellusedkars',
+          title: 'Z',
+          article_id: 7,
+          topic: 'mitch',
+          created_at: '2020-01-07T14:08:00.000Z',
+          votes: 0,
+          comment_count: 0,
+        });
+      });
+  });
+  it('200: Different SORT_BY: Responds with topic = mitch articles sorted by DATE ASC when all 3 queries passed that way', () => {
+    const sort_by = 'created_at';
+    const order = 'asc';
+    const topic = 'mitch';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=${order}&topic=${topic}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(11);
+        expect(res.body.articles).toBeSortedBy(sort_by, {
+          ascending: true,
+        });
+        expect(res.body.articles[0]).toEqual({
+          author: 'icellusedkars',
+          title: 'Z',
+          article_id: 7,
+          topic: 'mitch',
+          created_at: '2020-01-07T14:08:00.000Z',
+          votes: 0,
+          comment_count: 0,
+        });
+        expect(res.body.articles[10]).toEqual({
+          author: 'icellusedkars',
+          title: 'Eight pug gifs that remind me of mitch',
+          article_id: 3,
+          topic: 'mitch',
+          created_at: '2020-11-03T09:12:00.000Z',
+          votes: 0,
+          comment_count: 2,
+        });
+      });
+  });
+  it('200: Missing SORT_BY: Responds with topic = mitch articles sorted by DATE DESC when just one query, topic, used', () => {
+    const sort_by = 'created_at';
+    const topic = 'mitch';
+    return request(app)
+      .get(`/api/articles?topic=${topic}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(11);
+        expect(res.body.articles).toBeSortedBy(sort_by, {
+          descending: true,
+        });
+        expect(res.body.articles[0]).toEqual({
+          author: 'icellusedkars',
+          title: 'Eight pug gifs that remind me of mitch',
+          article_id: 3,
+          topic: 'mitch',
+          created_at: '2020-11-03T09:12:00.000Z',
+          votes: 0,
+          comment_count: 2,
+        });
+        expect(res.body.articles[10]).toEqual({
+          author: 'icellusedkars',
+          title: 'Z',
+          article_id: 7,
+          topic: 'mitch',
+          created_at: '2020-01-07T14:08:00.000Z',
+          votes: 0,
+          comment_count: 0,
+        });
+      });
+  });
+  it('200: Missing TOPIC: Responds with all articles sorted by COMMENT_COUNT DESC when just those queries used', () => {
+    const sort_by = 'comment_count';
+    const order = 'desc';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=${order}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(12);
+        expect(res.body.articles).toBeSortedBy(sort_by, {
+          descending: true,
+        });
+        expect(res.body.articles[0]).toEqual({
+          author: 'butter_bridge',
+          title: 'Living in the shadow of a great man',
+          article_id: 1,
+          topic: 'mitch',
+          created_at: '2020-07-09T20:11:00.000Z',
+          votes: 100,
+          comment_count: 11,
+        });
+      });
+  });
+  it('200: Missing ORDER: Responds with topic = mitch articles sorted by comment_count DESC (default order) only topic and sort by provided', () => {
+    const topic = 'mitch';
+    const sort_by = 'comment_count';
+    return request(app)
+      .get(`/api/articles?topic=${topic}&sort_by=${sort_by}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(11);
+        expect(res.body.articles).toBeSortedBy(sort_by, {
+          descending: true,
+        });
+        expect(res.body.articles[0]).toEqual({
+          author: 'butter_bridge',
+          title: 'Living in the shadow of a great man',
+          article_id: 1,
+          topic: 'mitch',
+          created_at: '2020-07-09T20:11:00.000Z',
+          votes: 100,
+          comment_count: 11,
+        });
+      });
+  });
+  it('200: Responds with empty array if no articles found for valid search parameters', () => {
+    const sort_by = 'created_at';
+    const order = 'asc';
+    const topic = 'paper';
+    return request(app)
+      .get(`/api/articles?sort_by=${sort_by}&order=${order}&topic=${topic}`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body.articles).toBeInstanceOf(Array);
+        expect(res.body.articles.length).toBe(0);
       });
   });
 });
