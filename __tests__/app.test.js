@@ -285,6 +285,26 @@ describe('Errors: GET requests for /api/articles/', () => {
   });
 });
 
+describe('Errors: DELETE requests for /api/comments/:comment_id', () => {
+  it("404: Responds with 'Comment [comment_id] not found' message given comment that doesn't exist in DELETE query string", () => {
+    const comment_id = 999;
+    return request(app)
+      .delete(`/api/comments/${comment_id}`)
+      .expect(404)
+      .then((res) => {
+        expect(res.body.msg).toBe(`Comment '${comment_id}' not found`);
+      });
+  });
+  it("400: Responds with 'Comment ID must be a number' if comment_id not a number", () => {
+    const identifier = 'notNum';
+    return request(app)
+      .delete(`/api/comments/${identifier}`)
+      .then((res) => {
+        expect(res.body.msg).toBe('Comment ID must be a number');
+      });
+  });
+});
+
 // SUCCESS PATHS
 describe('Success path: GET requests for topics: /api/topics', () => {
   it('200: Responds with array of topic objects, including slug and description', () => {
@@ -704,6 +724,17 @@ describe('Success path: GET /api/articles/ + queries', () => {
       .then((res) => {
         expect(res.body.articles).toBeInstanceOf(Array);
         expect(res.body.articles.length).toBe(0);
+      });
+  });
+});
+describe('Success path: DELETE /api/comments/:comment_id', () => {
+  it('204: Responds with status 204 and no content', () => {
+    const comment_id = 3;
+    return request(app)
+      .delete(`/api/comments/${comment_id}`)
+      .expect(204, '')
+      .then((res) => {
+        expect(res.statusCode).toBe(204);
       });
   });
 });
