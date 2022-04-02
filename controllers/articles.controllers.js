@@ -4,9 +4,14 @@ const {
   selectCommentsByArticleId,
   selectArticles,
   insertCommentByArticleId,
+  isValidArticleColumn,
 } = require('../models/articles.models');
 
 const { selectUserByUsername } = require('../models/users.models');
+
+const { selectTopicBySlug } = require('../models/topics.models');
+
+const { isValidOrder } = require('../models/utils.models');
 
 exports.getArticleById = (req, res, next) => {
   const { article_id } = req.params;
@@ -18,7 +23,27 @@ exports.getArticleById = (req, res, next) => {
 };
 
 exports.getArticles = (req, res, next) => {
-  selectArticles()
+  const { sort_by, order, topic } = req.query;
+  const validParams = ['sort_by', 'order', 'topic'];
+  const queryParams = Object.keys(req.query);
+
+  if (!queryParams.every((elem) => validParams.includes(elem))) {
+    return next({
+      status: 400,
+      msg: `Invalid query string index: valid query indexes are 'topic', 'sort_by' and 'order'`,
+    });
+  }
+
+  const validateQueryParams = [
+    isValidArticleColumn(sort_by),
+    isValidOrder(order),
+    selectTopicBySlug(topic),
+  ];
+
+  Promise.all(validateQueryParams)
+    .then((res) => {
+      return selectArticles(sort_by, order, topic);
+    })
     .then((articles) => {
       res.status(200).send({ articles });
     })
