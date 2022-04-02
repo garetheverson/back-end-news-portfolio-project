@@ -1,8 +1,18 @@
 const db = require('../db/connection');
 const format = require('pg-format');
-// const res = require('express/lib/response');
 
-// SELECT models
+// Create: INSERT models
+exports.insertCommentByArticleId = (article_id, username, comment_body) => {
+  const query = `INSERT into comments (article_id, author, body) 
+  VALUES ($1, $2, $3)
+  RETURNING *;`;
+
+  return db.query(query, [article_id, username, comment_body]).then((res) => {
+    return res.rows[0];
+  });
+};
+
+// Read: SELECT models
 exports.selectArticleById = (article_id) => {
   const query = `SELECT u.username as author, a.title,a.article_id, a.body,a.topic,a.created_at, a.votes, COUNT(c.article_id)::int as comment_count
     FROM articles a
@@ -82,18 +92,7 @@ exports.isValidArticleColumn = (sort_by = 'created_at') => {
   return sort_by;
 };
 
-// INSERT models
-exports.insertCommentByArticleId = (article_id, username, comment_body) => {
-  const query = `INSERT into comments (article_id, author, body) 
-  VALUES ($1, $2, $3)
-  RETURNING *;`;
-
-  return db.query(query, [article_id, username, comment_body]).then((res) => {
-    return res.rows[0];
-  });
-};
-
-// UPDATE models
+// Update: UPDATE models
 exports.updateArticleVotesById = (article_id, inc_votes) => {
   const query = `UPDATE articles
   SET votes = votes + $1
@@ -108,5 +107,20 @@ exports.updateArticleVotesById = (article_id, inc_votes) => {
       });
     }
     return res.rows[0];
+  });
+};
+
+// DELETE models
+exports.deleteCommentByIdModel = (comment_id) => {
+  const query = `DELETE FROM comments WHERE comment_id = $1 RETURNING *;`;
+
+  return db.query(query, [comment_id]).then((res) => {
+    if (!res.rows.length) {
+      return Promise.reject({
+        msg: `Comment '${comment_id}' not found`,
+        status: 404,
+      });
+    }
+    return res;
   });
 };
