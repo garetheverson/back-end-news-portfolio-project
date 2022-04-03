@@ -1,16 +1,16 @@
 {
   "GET /api": {
-    "description": "serves up a json representation of all the available endpoints of the api"
+    "description": "Returns a JSON representation of all the available endpoints of the API"
   },
   "GET /api/topics": {
-    "description": "serves an array of all topics",
+    "description": "Serves an array of all topics",
     "queries": [],
     "exampleResponse": {
       "topics": [{ "slug": "football", "description": "Footie!" }]
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all topics",
+    "description": "Serves an array of all articles",
     "queries": ["author", "topic", "sort_by", "order"],
     "exampleResponse": {
       "articles": [
@@ -23,5 +23,69 @@
         }
       ]
     }
+  },
+  "GET /api/articles/:article_id": {
+    "description": "Returns an article object of article_id",
+    "queries": [],
+    "exampleResponse": {
+      "article":{
+          "title": "Seafood substitutions are increasing",
+          "topic": "cooking",
+          "author": "weegembump",
+          "body": "Text from the article..",
+          "created_at": 1527695953341,
+          "votes": 10,
+          "comment_count": 10
+        }
+    }
+  },
+  "PATCH /api/articles/_article_id": {
+    "description": "Increases the votes given to article_id by the given amount (accepts negative values), returns updated article object",
+    "queries": [],
+    "exampleRequestBody": { "inc_votes": 1 },
+    "exampleResponse": {
+      "article": {
+          "title": "Seafood substitutions are increasing",
+          "topic": "cooking",
+          "author": "weegembump",
+          "body": "Text from the article..",
+          "created_at": 1527695953341,
+          "votes": 11,
+          "comment_count": 10
+        }
+    }
+  },
+  "GET /api/articles/:article_id/comments": {
+    "description": "Serves an array of comments associated with article_id",
+    "queries": [],
+    "exampleResponse": {
+      "comments": [
+        {
+          "comment_id": 1,
+          "author": "rogsop",
+          "body": "Comment",
+          "created_at": 1527695953341,
+          "votes": 10
+        }]
+    }
+  },
+  "POST api.articles/:article_id/comments": {
+    "description": "Posts a new comment to article based on article_id, and returns that comment",
+    "queries": [],
+    "exampleRequestBody": { "username": "rogsop", "body":"A comment for article_id..." },
+    "exampleResponse": {
+      "comments":{
+          "comment_id": 19,
+          "author": "rogsop",
+          "body": "A comment for article_id...",
+          "created_at": 1527695973492,
+          "votes": 0
+        }
+    }
+  },
+  "DELETE api/comments/:comment_id": {
+    "description": "Deletes comment with 204 code if successful. Doesn't return anything",
+    "queries": [],
+    "exampleResponse": {}
   }
 }

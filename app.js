@@ -1,35 +1,23 @@
+//Routers
 const express = require('express');
-const { getTopics } = require('./controllers/topics.controllers');
-
-const {
-  getArticleById,
-  patchArticleVotesById,
-  getCommentsByArticleId,
-  getArticles,
-  postCommentByArticleId,
-  deleteCommentById,
-} = require('./controllers/articles.controllers');
-
-const { getUsers } = require('./controllers/users.controllers');
+const apiRouter = require('./routes/api-router');
+const articlesRouter = require('./routes/articles-router');
+const commentsRouter = require('./routes/comments-router');
+const topicsRouter = require('./routes/topics-router');
+const usersRouter = require('./routes/users-router');
 
 const app = express();
 app.use(express.json());
 
-// Create: Post methods
-app.post('/api/articles/:article_id/comments', postCommentByArticleId);
+// app.use routers
+app.use(apiRouter);
+app.use(articlesRouter);
+app.use(commentsRouter);
+app.use(topicsRouter);
+app.use(usersRouter);
 
-// Read: Get Methods
-app.get('/api/topics', getTopics);
-app.get('/api/articles/:article_id', getArticleById);
-app.get('/api/articles/:article_id/comments', getCommentsByArticleId);
-app.get('/api/articles', getArticles);
-app.get('/api/users', getUsers);
-
-// Update: Patch Methods
-app.patch('/api/articles/:article_id', patchArticleVotesById);
-
-// Delete: Delete Methods
-app.delete('/api/comments/:comment_id', deleteCommentById);
+// Route paths
+app.use('/api', apiRouter);
 
 // Handle path not found errors
 app.all('/*', (req, res) => {

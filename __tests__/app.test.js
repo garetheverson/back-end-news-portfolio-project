@@ -5,6 +5,7 @@ const seed = require('../db/seeds/seed');
 const testData = require('../db/data/test-data');
 const jestSorted = require('jest-sorted');
 const articles = require('../db/data/test-data/articles');
+const endpoints = require('../endpoints.json');
 
 afterAll(() => db.end());
 beforeEach(() => seed(testData));
@@ -735,6 +736,16 @@ describe('Success path: DELETE /api/comments/:comment_id', () => {
       .expect(204, '')
       .then((res) => {
         expect(res.statusCode).toBe(204);
+      });
+  });
+});
+describe('Success path: GET /api/', () => {
+  it('200: Returns an object with all of the API endpoints', () => {
+    return request(app)
+      .get(`/api`)
+      .expect(200)
+      .then((res) => {
+        expect(res.body).toMatchObject(endpoints);
       });
   });
 });
